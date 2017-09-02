@@ -1,0 +1,1 @@
+{"history": 30, "batchsize": 5000, "train_datasets": "whitenoise_temp", "date": "train", "cells": [2], "test_datasets": "whitenoise", "clipped": 0.0}

@@ -74,7 +74,7 @@ class Experiment(object):
 
         # partially apply function arguments to the loadexpt function
         load_data = partial(loadexpt, expt, cells, history=history, zscore_flag=zscore_flag)
-
+        # parameter expt has been abandoned by fxy 20170830
         # load training data, and generate the train/validation split, for each filename
         self._train_data = {}
         self._train_batches = list()
@@ -86,15 +86,15 @@ class Experiment(object):
 
             # generate the train/validation split
             length = self._train_data[filename].X.shape[0]
+            print(self._train_data[filename].X.shape,self._train_data[filename].y.shape)
             train, val = _train_val_split(length, self.batchsize, holdout)
-
+            #print(train.shape,val.shape)
             # append these train/validation batches to the master list
             self._train_batches.extend(zip(repeat(filename), train))
             self._validation_batches.extend(zip(repeat(filename), val))
 
         # load the data for each experiment, store as a list of Exptdata tuple
         self._test_data = {filename: load_data(filename, 'test', nskip=0) for filename in test_filenames}
-
         # save batches_per_epoch for calculating # epochs later
         self.batches_per_epoch = len(self._train_batches)
 
@@ -166,7 +166,8 @@ class Experiment(object):
                 stim[key] = Exptdata(ex.X[:, :, xi, yi], ex.y)
 
 
-def loadexpt(expt, cells, filename, train_or_test, history, nskip, zscore_flag=True):
+def loadexpt(expt, cells, filename, train_or_test, history, nskip=0, zscore_flag=True):
+    print("parameter expt has been abandoned by fxy 20170830")
     """Loads an experiment from an h5 file on disk
 
     Parameters
@@ -198,7 +199,11 @@ def loadexpt(expt, cells, filename, train_or_test, history, nskip, zscore_flag=T
     with notify('Loading {}ing data for {}/{}'.format(train_or_test, expt, filename)):
 
         # load the hdf5 file
-        filepath = os.path.join(os.path.expanduser('~/experiments/data'), expt, filename + '.h5')
+
+        filepath = os.path.join(os.path.expanduser('F:\GitHub\data'), filename + '.h5')
+
+        print("fxy: filepath : %s"%(filepath))
+        #filepath = os.path.join(os.path.expanduser('~/experiments/data'), expt, filename + '.h5')
         with h5py.File(filepath, mode='r') as f:
 
             expt_length = f[train_or_test]['time'].size
@@ -211,14 +216,15 @@ def loadexpt(expt, cells, filename, train_or_test, history, nskip, zscore_flag=T
                 stim = zscore(stim)
 
             # apply clipping to remove the stimulus just after transitions
-            num_blocks = NUM_BLOCKS[expt] if train_or_test == 'train' else 1
-            valid_indices = np.arange(expt_length).reshape(num_blocks, -1)[:, nskip:].ravel()
+            #num_blocks = NUM_BLOCKS[expt] if train_or_test == 'train' else 1
+            #valid_indices = np.arange(expt_length).reshape(num_blocks, -1)[:, nskip:].ravel()
 
             # reshape into the Toeplitz matrix (nsamples, history, *stim_dims)
-            stim_reshaped = rolling_window(stim[valid_indices], history, time_axis=0)
-
+            #stim_reshaped = rolling_window(stim[valid_indices], history, time_axis=0)
+            stim_reshaped = rolling_window(stim, history, time_axis=0)
             # get the response for this cell (nsamples, ncells)
-            resp = np.array(f[train_or_test]['response/firing_rate_10ms'][cells]).T[valid_indices]
+            #resp = np.array(f[train_or_test]['response/firing_rate_10ms'][cells]).T[valid_indices]
+            resp = np.array(f[train_or_test]['response/firing_rate_10ms'][cells]).T
             resp = resp[history:]
 
     return Exptdata(stim_reshaped, resp)

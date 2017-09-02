@@ -3,7 +3,8 @@ Helper utilities for saving models and model outputs
 """
 
 from __future__ import absolute_import, division, print_function
-from os import mkdir, uname, getenv, path
+from os import mkdir, getenv, path
+from platform import uname
 from json import dumps
 from collections import namedtuple
 from itertools import product
@@ -26,10 +27,11 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 __all__ = ['Monitor', 'KerasMonitor', 'main_wrapper']
-
+import os
 directories = {
-    'dropbox': path.expanduser('~/Dropbox/deep-retina/saved/'),
-    'database': path.expanduser('~/deep-retina-results/database'),
+    #'dropbox': path.expanduser('~/Dropbox/deep-retina/saved/'),
+    'dropbox': path.expanduser('F:/GitHub/deep-retina/saved/'),
+    'database': os.getcwd()+'/database',
 }
 
 
@@ -87,7 +89,8 @@ class Monitor:
             # write some generic data to the file
             self._save_text('metadata.json', dumps(machine))
             self._save_text('experiment.json', dumps(self.experiment.info))
-            self._save_text('README.md', readme)
+            if readme!=None:
+                self._save_text('README.md', readme)
 
             # start CSV files for train and validation performance
             headers = ','.join(('Epoch', 'Iteration') + tuple(map(str.upper, self.metrics))) + '\n'
@@ -98,7 +101,7 @@ class Monitor:
             with h5py.File(self._dbpath('results.h5'), 'x') as f:
 
                 # store metadata
-                f.attrs.update(machine)
+                #f.attrs.update(machine)
                 f.attrs['md5'] = self.hashkey
 
                 # store experiment info
@@ -144,11 +147,11 @@ class Monitor:
         """
         #rhat_train = model_predict(X_train)
         #print(X_train.shape)
-        rhat_train = model_predict({'stim': X_train}) #only updating this for graph model
+        rhat_train = model_predict({'stim_input': X_train}) #only updating this for graph model
         #print(rhat_train['loss'].shape)
 
         # training performance
-        avg_train, all_train = allmetrics(r_train, model_predict({'stim': X_train}), self.metrics)
+        avg_train, all_train = allmetrics(r_train, model_predict({'stim_input': X_train}), self.metrics)
         data_row = [epoch, iteration] + [avg_train[metric] for metric in self.metrics]
         self._append_csv('train.csv', data_row)
 
@@ -203,7 +206,7 @@ class Monitor:
         """Generates a full path to save the given file in the database directory"""
         return path.join(directories['database'], self.directory, filename)
 
-    def _save_text(self, filename, text, dropbox=True):
+    def _save_text(self, filename, text, dropbox=False):
         """Writes the given text to a file
         Optionally copies the file to Dropbox
 
