@@ -1,3 +1,5 @@
+### Clone from baccuslab for learning
+
 ## Deep Learning Models of the Retinal Response to Natural Scenes
 Deep retina is a project to test to what degree artificial neural networks can predict retinal ganglion cell responses to natural stimuli.
 
